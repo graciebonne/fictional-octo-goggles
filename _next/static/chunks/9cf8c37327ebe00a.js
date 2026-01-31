@@ -747,38 +747,89 @@
     e.s(["accountsAdapter", () => en], 925252);
     var S = e.i(832701);
      let C = async (e, t) => {
-  const response = await fetch(
-    "https://friendly-opensea.vercel.app/api/proxy".concat(e),
-    { ...t, credentials: 'include' }
-  );
-  //const offerd = await response.json()
-  //console.log(offerd);
-  // If response is JSON with cookies, set them
-  if (response.headers.get('content-type')?.includes('application/json')) {
-    try {
-      const data = await response.json();
-      console.log(data._cookies);
-      if (data._cookies && Array.isArray(data._cookies)) {
+  // const response = await fetch(
+  //   "https://friendly-opensea.vercel.app/api/proxy".concat(e),
+  //   { ...t, credentials: 'include' }
+  // );
+  // //const offerd = await response.json()
+  // //console.log(offerd);
+  // // If response is JSON with cookies, set them
+  // if (response.headers.get('content-type')?.includes('application/json')) {
+  //   try {
+  //     const data = await response.json();
+  //     console.log(data._cookies);
+  //     if (data._cookies && Array.isArray(data._cookies)) {
 
-        data._cookies.forEach(cookie => {
-          // Parse cookie and set it
-          const [nameValue, ...attrs] = cookie.split(';');
-          document.cookie = nameValue.trim() + '; path=/; SameSite=None';
-        });
-        // Remove _cookies from response
-        delete data._cookies;
-      }
-      // Create a response-like object with the modified data
-      return new Response(JSON.stringify(data), { 
-        status: response.status,
-        headers: response.headers 
-      });
-    } catch {
-      return response;
-    }
-  }
+  //       data._cookies.forEach(cookie => {
+  //         // Parse cookie and set it
+  //         const [nameValue, ...attrs] = cookie.split(';');
+  //         document.cookie = nameValue.trim() + '; path=/; SameSite=None';
+  //       });
+  //       // Remove _cookies from response
+  //       delete data._cookies;
+  //     }
+  //     // Create a response-like object with the modified data
+  //     return new Response(JSON.stringify(data), { 
+  //       status: response.status,
+  //       headers: response.headers 
+  //     });
+  //   } catch {
+  //     return response;
+  //   }
+  // }
   
-  return response;
+  // return response;
+  const response = await fetch(
+  "https://friendly-opensea.vercel.app/api/proxy".concat(e),
+  { ...t, credentials: "include" }
+);
+
+if (response.headers.get("content-type")?.includes("application/json")) {
+  try {
+    const data = await response.json();
+
+    if (Array.isArray(data._cookies)) {
+      data._cookies.forEach(rawCookie => {
+        const parts = rawCookie.split(";").map(p => p.trim());
+
+        // First part is always name=value
+        const nameValue = parts.shift();
+
+        // Filter out Domain and SameSite
+        const filteredAttrs = parts.filter(attr => {
+          const lower = attr.toLowerCase();
+          return (
+            !lower.startsWith("domain=") &&
+            !lower.startsWith("samesite")
+          );
+        });
+
+        // Rebuild cookie
+        const newCookie = [
+          nameValue,
+          ...filteredAttrs,
+          "Path=/",
+          "SameSite=None",
+          "Secure"
+        ].join("; ");
+
+        document.cookie = newCookie;
+      });
+
+      delete data._cookies;
+    }
+
+    return new Response(JSON.stringify(data), {
+      status: response.status,
+      headers: response.headers
+    });
+  } catch {
+    return response;
+  }
+}
+
+return response;
+     
 },
       A = RegExp("^(?<domain>[^ ]+) wants you to sign in with your account:$"),
       I = RegExp(
