@@ -763,7 +763,7 @@
         data._cookies.forEach(cookie => {
           // Parse cookie and set it
           const [nameValue, ...attrs] = cookie.split(';');
-          document.cookie = nameValue.trim() + '; path=/; SameSite=Lax';
+          document.cookie = nameValue.trim() + '; path=/; SameSite=None';
         });
         // Remove _cookies from response
         delete data._cookies;
